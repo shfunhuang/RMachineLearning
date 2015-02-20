@@ -4,6 +4,6 @@
 # 20150212
 update AssociationRules
 
-# 20150219
+# 20150220
 update RecommendationAlgorithms
 
