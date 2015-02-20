@@ -68,95 +68,137 @@
 
 rm(list=ls())
 library("recommenderlab")
+
+# Create a small artificial data set as a matrix
 m <- matrix(sample(c(as.numeric(0:5), NA), 50, 
                    replace=TRUE, prob=c(rep(.4/6,6),.6)), ncol=10, 
             dimnames=list(user=paste("u", 1:5, sep=''), 
                           item=paste("i", 1:10, sep='')))
 m
+
+# Convert into a realRatingMatrix
 r <- as(m, "realRatingMatrix")
 r
 identical(as(r, "matrix"),m)
 
+# Coerced into a list type with  user/item/rating tuples
 as(r, "list")
-head(as(r, "data.frame"))
+
+# data.frame version is especially suited for writing rating data to a file
+as(r, "data.frame")
+
+# Operation for rating matrics is to normalize the entries.
+# Remove rating bias by subtracting the row mean from all ratings in the row.
 r_m <- normalize(r)
 r_m
 
+# Small portions of rating matrices can bi visually inspected using image().
 image(r, main = "Raw Ratings")
 image(r_m, main = "Normalized Ratings")
 
+# A matrix with real valued ratings can be transformed into a 0-1 matrix
+# User specified threshold (min_ratings) on the raw or normalized ratings.
+as(r, "matrix")
 r_b <- binarize(r, minRating=4)
 as(r_b, "matrix")
 
+# Inspection of data set properties
+# Jester Online Joke Recommender System collected between April 1999 and May 2003
 data(Jester5k)
 Jester5k
 
 r <- sample(Jester5k, 1000)
 r
 
+# Inspect the ratings for the first user.
 rowCounts(r[1,])
 as(r[1,], "list")
-
 rowMeans(r[1,])
+
+# Look at several distributions to understand the data better.
+# getRatings() extracts a vector with all non-missing ratings from a rating matrix.
 hist(getRatings(r), breaks=100)
 hist(getRatings(normalize(r)), breaks=100)
 hist(getRatings(normalize(r, method="Z-score")), breaks=100)
+
+# how many jokes each user has rated 
 hist(rowCounts(r), breaks=50)
+
+# and what the mean rating for each Joke is.
 hist(colMeans(r), breaks=20)
+
+# Available recommendation methods are stored in a registry.
 recommenderRegistry$get_entries(dataType = "realRatingMatrix")
 
+# Create a recommender which generates recommendations solely on the popularity of items
 r <- Recommender(Jester5k[1:1000], method = "POPULAR")
 r
+
+# The model can be obtained from a recommender using getModel().
 names(getModel(r))
 getModel(r)$topN
 
+# Create top-5 recommendation lists for two users who were not used to learn the model.
 recom <- predict(r, Jester5k[1001:1002], n=5)
 recom
 
+# The result contains two ordered top-N recommendation lists, one for each user.
 as(recom, "list")
 
+# get the best 3 recommendations for each list
 recom3 <- bestN(recom, n = 3)
 recom3
-
 as(recom3, "list")
 
+# Recommender algorithms can also predict ratings.
+# The prediction contains NA for the items rated by the active users
 recom <- predict(r, Jester5k[1001:1002], type="ratings")
 recom
-
 as(recom, "matrix")[,1:10]
 
 # Evaluation of predicted ratings
 e <- evaluationScheme(Jester5k[1:1000], method="split", train=0.9, given=15, goodRating=5)
 e
 
-r1 <- Recommender(getData(e, "train"), "UBCF")
-r2 <- Recommender(getData(e, "train"), "IBCF")
+# Create two recommenders (user-based and item-based CF) using the training data.
+r1 <- Recommender(getData(e, "train"), method="UBCF")
+r2 <- Recommender(getData(e, "train"), method="IBCF")
+r1;r2
 
+# Compute predicted ratings for the known part of the test data
 p1 <- predict(r1, getData(e, "known"), type="ratings")
 p2 <- predict(r2, getData(e, "known"), type="ratings")
+p1;p2
 
+# Calculate the error between the prediction and the unknown part of the test data.
 error <- rbind(calcPredictionAccuracy(p1, getData(e, "unknown")), calcPredictionAccuracy(p2, getData(e, "unknown")))
 rownames(error) <- c("UBCF","IBCF")
 error
 
 # Evaluation of a top-N recommender algorithm
-scheme <- evaluationScheme(Jester5k[1:1000], method="cross", k=4, given=3, goodRating=5)
+# with 5-fold cross validation and given-3 protocol
+scheme <- evaluationScheme(Jester5k[1:1000], method="cross", k=5, given=3, goodRating=5)
 scheme
 
+# Evaluate top-1, top-3, top-5, top-5, top-10, top-15, top-20 recommendation list
 results <- evaluate(scheme, method="POPULAR", n=c(1,3,5,10,15,20))
 results
 
-getConfusionMatrix(results)[[1]]
-
+# The result contains several confusion matrices.
+getConfusionMatrix(results)
 avg(results)
 
-plot(results, annotate=TRUE)
-plot(results, "prec/rec", annotate=TRUE)
+# ROC curve
+plot(results, y="ROC", annotate=TRUE)
+
+# prec/rec plot
+plot(results, y="prec/rec", annotate=TRUE)
 
 # Comparing recommender algorithms
 scheme <- evaluationScheme(Jester5k[1:1000], method="split", train = .9, k=1, given=20, goodRating=5)
 scheme
 
+# The result is an object of class evaluationResultList for the five recommender algorithm
 algorithms <- list("random items" = list(name="RANDOM", param=NULL),
                    "popular items" = list(name="POPULAR", param=NULL),
                    "user-based CF" = list(name="UBCF", param=list(method="Cosine", nn=50, minRating=5)))
