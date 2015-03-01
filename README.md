@@ -7,3 +7,5 @@ update AssociationRules
 # 20150220
 update RecommendationAlgorithms
 
+# 20150301
+update AssociationRules
