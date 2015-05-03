@@ -2,6 +2,31 @@ rm(list=ls())
 
 ### LOGISTIC REGRESSION TUTORIALS ###
 
+### Preliminaries ###
+
+### ODDS
+# odds = p(one outcome)/p(the other outcome)
+# If p(success) = p(failure), then odds(success) = 1 (or 1 to 1, or 1:1).
+# If p(success) < p(failure), then odds(success) < 1.
+# If p(success) > p(failure), then odds(success) > 1.
+# Unlike probability, which cannot exceed 1, there is no upper bound on odds.
+
+### LOGIT
+# The natural log of odds is called the logit, or logit transformation, of p: logit(p) = log_e(p/q).
+# Logit is sometimes called "log odds."
+# If odds(success) = 1, then logit(p) = 0.
+# If odds(success) < 1, then logit(p) < 0.
+# If odds(success) > 1, then logit(p) > 0.
+
+### CONCEPT
+# Logistic regression is a method for fitting a regression curve, y = f(x), when y consists of PROPORTIONS or PROBABILITIES, or BINARY (0,1--failure,success) data.
+# When the response is a BINARY (dichotomous) variable, and x is NUMERICAL, logistic regression fits a logistic curve to the relationship between x and y.
+
+# Logistic function: y = [exp(b0 + b1x)] / [1 + exp(b0 + b1x)]
+# Logistic regression is linear regression on the logit transform of y, where y is the proportion (or probability) of success at each value of x.
+
+
+
 ### Logistic Regression: One Numerical Predictor
 
 library("MASS")
@@ -140,7 +165,5 @@ exp(-2.2046)
 exp(-2.2046) / exp(-2.1662)          # C:A / D:A leaves C:D
 
 # Statistics are nice, but in the end it's what makes sense that should rule the day.
-
-
 
 
